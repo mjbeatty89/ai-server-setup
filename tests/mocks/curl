@@ -1,0 +1,3 @@
+#!/bin/bash
+# Mock curl
+exit 0

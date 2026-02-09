@@ -1,0 +1,4 @@
+#!/bin/bash
+# Mock tee
+cat > /dev/null # Consume input
+exit 0

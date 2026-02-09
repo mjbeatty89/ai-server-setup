@@ -1,0 +1,6 @@
+#!/bin/bash
+# Mock lsb_release
+if [[ "$1" == "-cs" ]]; then
+    echo "noble"
+fi
+exit 0
