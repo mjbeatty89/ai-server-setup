@@ -1,0 +1,103 @@
+[MOCK] sudo apt update
+[MOCK] sudo apt install -y curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release
+[MOCK] curl -sS https://downloads.1password.com/linux/keys/1password.asc
+[MOCK] sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+[MOCK] sudo tee /etc/apt/sources.list.d/1password.list
+[MOCK] sudo apt update
+[MOCK] curl -fsSL https://download.docker.com/linux/ubuntu/gpg
+[MOCK] sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+[MOCK] sudo tee /etc/apt/sources.list.d/docker.list
+[MOCK] sudo apt update
+[MOCK] sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+[MOCK] sudo usermod -aG docker jules
+[MOCK] xargs -n 50 sudo apt install -y --ignore-missing
+[MOCK] sudo snap install alacritty
+[MOCK] sudo snap install arduino
+[MOCK] sudo snap install aws-cli
+[MOCK] sudo snap install beekeeper-studio
+[MOCK] sudo snap install bitwarden
+[MOCK] sudo snap install brave
+[MOCK] sudo snap install canonical-livepatch
+[MOCK] sudo snap install certbot
+[MOCK] sudo snap install chromium
+[MOCK] sudo snap install chromium-ffmpeg
+[MOCK] sudo snap install code
+[MOCK] sudo snap install copilot-desktop
+[MOCK] sudo snap install cups
+[MOCK] sudo snap install discord
+[MOCK] sudo snap install docker
+[MOCK] sudo snap install dotnet
+[MOCK] sudo snap install dotnet-manifest
+[MOCK] sudo snap install drawio
+[MOCK] sudo snap install emacs
+[MOCK] sudo snap install espressif-esptool
+[MOCK] sudo snap install firefox
+[MOCK] sudo snap install firmware-updater
+[MOCK] sudo snap install freecad
+[MOCK] sudo snap install fx
+[MOCK] sudo snap install gaming-graphics-core24
+[MOCK] sudo snap install gemini-desktop
+[MOCK] sudo snap install ghostty
+[MOCK] sudo snap install gnome-3-28-1804
+[MOCK] sudo snap install gnome-3-38-2004
+[MOCK] sudo snap install gnome-42-2204
+[MOCK] sudo snap install gnome-46-2404
+[MOCK] sudo snap install go
+[MOCK] sudo snap install gtk-common-themes
+[MOCK] sudo snap install helix
+[MOCK] sudo snap install home-assistant-hacs
+[MOCK] sudo snap install home-assistant-snap
+[MOCK] sudo snap install homebridge
+[MOCK] sudo snap install kf5-core22
+[MOCK] sudo snap install kf6-core22
+[MOCK] sudo snap install kf6-core24
+[MOCK] sudo snap install konsole
+[MOCK] sudo snap install kubectl
+[MOCK] sudo snap install kubefedctl
+[MOCK] sudo snap install kubetail
+[MOCK] sudo snap install landscape-client
+[MOCK] sudo snap install lemonade
+[MOCK] sudo snap install libreoffice
+[MOCK] sudo snap install librepcb
+[MOCK] sudo snap install lxd
+[MOCK] sudo snap install mesa-2404
+[MOCK] sudo snap install mosquitto
+[MOCK] sudo snap install mqtt-explorer
+[MOCK] sudo snap install multipass
+[MOCK] sudo snap install music-assistant-server
+[MOCK] sudo snap install mysql
+[MOCK] sudo snap install netbeans
+[MOCK] sudo snap install notepad-plus-plus
+[MOCK] sudo snap install okular
+[MOCK] sudo snap install openhab
+[MOCK] sudo snap install opentofu
+[MOCK] sudo snap install opera
+[MOCK] sudo snap install perplexity-desktop
+[MOCK] sudo snap install postgresql
+[MOCK] sudo snap install postman
+[MOCK] sudo snap install powershell
+[MOCK] sudo snap install powershell-preview
+[MOCK] sudo snap install remmina
+[MOCK] sudo snap install rpi-imager
+[MOCK] sudo snap install shellhub
+[MOCK] sudo snap install signal-desktop
+[MOCK] sudo snap install slack
+[MOCK] sudo snap install snap-store
+[MOCK] sudo snap install snapd-desktop-integration
+[MOCK] sudo snap install steam
+[MOCK] sudo snap install sublime-text
+[MOCK] sudo snap install telegram-desktop
+[MOCK] sudo snap install thunderbird
+[MOCK] sudo snap install tldr
+[MOCK] sudo snap install vault
+[MOCK] sudo snap install vivaldi
+[MOCK] sudo snap install waveterm
+[MOCK] sudo snap install wine-platform-9-devel-core22
+[MOCK] sudo snap install wine-platform-runtime-core22
+[MOCK] sudo snap install yazi
+[MOCK] sudo snap install zwave-js-ui
+[MOCK] cp configs/.bashrc /home/jules/
+[MOCK] cp configs/.profile /home/jules/
+[MOCK] sudo apt install -y python3-pip python3-venv
+[MOCK] sudo mkdir -p /ai-workspace/models /ai-workspace/datasets /ai-workspace/projects /ai-workspace/configs
+[MOCK] sudo chown -R jules:jules /ai-workspace
