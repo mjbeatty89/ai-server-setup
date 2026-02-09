@@ -1,0 +1,17 @@
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+
+# Private configurations (if any)
+private/
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
