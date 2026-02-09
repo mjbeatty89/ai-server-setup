@@ -1,0 +1,31 @@
+#!/bin/bash
+# Mock sudo
+
+# We only care about the command after sudo
+CMD="$1"
+shift
+
+if [[ "$CMD" == "apt" ]]; then
+    IS_INSTALL=0
+    IS_IGNORE_MISSING=0
+
+    if [[ "$1" == "install" ]]; then
+        IS_INSTALL=1
+    fi
+
+    for arg in "$@"; do
+        if [[ "$arg" == "--ignore-missing" ]]; then
+            IS_IGNORE_MISSING=1
+        fi
+    done
+
+    if [[ "$IS_INSTALL" -eq 1 && "$IS_IGNORE_MISSING" -eq 1 ]]; then
+        if [[ "$FAIL_APT_BATCH" == "1" ]]; then
+            echo "MOCK: Simulating apt failure for batch install" >&2
+            exit 100
+        fi
+    fi
+fi
+
+# Default success
+exit 0

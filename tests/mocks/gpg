@@ -1,0 +1,4 @@
+#!/bin/bash
+# Mock gpg
+cat > /dev/null # Consume stdin
+exit 0

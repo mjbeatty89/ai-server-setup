@@ -1,0 +1,6 @@
+#!/bin/bash
+# Mock dpkg
+if [[ "$1" == "--print-architecture" ]]; then
+    echo "amd64"
+fi
+exit 0
