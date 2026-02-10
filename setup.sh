@@ -42,19 +42,43 @@ print_status "Installing essential packages..."
 ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
 sudo apt install -y $ESSENTIALS
 
+# Ask about NVIDIA drivers early
+print_status "Would you like to install NVIDIA drivers for your GPUs? (y/n)"
+read -r INSTALL_NVIDIA
+
 # Install 1Password (special case - needs repo)
 print_status "Setting up 1Password repository..."
 curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
-sudo apt update
+# Consolidating apt update
 
 # Install Docker (if it was in snap list)
-print_status "Installing Docker..."
+print_status "Setting up Docker repository..."
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Consolidating apt update
+
+# Setup NVIDIA drivers PPA if requested
+if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
+    print_status "Adding NVIDIA PPA..."
+    sudo add-apt-repository ppa:graphics-drivers/ppa -y -n
+fi
+
+# Consolidated Update
+print_status "Updating package lists (consolidated)..."
 sudo apt update
+
+# Install Docker packages
+print_status "Installing Docker packages..."
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER
+
+# Install NVIDIA drivers if requested
+if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
+    print_status "Installing NVIDIA drivers..."
+    sudo apt install -y nvidia-driver-550 nvidia-utils-550
+    print_success "NVIDIA drivers installed (reboot required)"
+fi
 
 # Install APT packages
 print_status "Installing APT packages (this will take a while)..."
@@ -100,16 +124,6 @@ fi
 # Install Python pip
 print_status "Installing Python pip..."
 sudo apt install -y python3-pip python3-venv
-
-# Setup NVIDIA drivers (for your GPUs)
-print_status "Would you like to install NVIDIA drivers for your GPUs? (y/n)"
-read -r response
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
-    sudo apt update
-    sudo apt install -y nvidia-driver-550 nvidia-utils-550
-    print_success "NVIDIA drivers installed (reboot required)"
-fi
 
 # Create AI workspace directory
 print_status "Creating /ai-workspace directory structure..."
