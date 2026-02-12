@@ -66,7 +66,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
     # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 50 sudo apt install -y --ignore-missing || true
+    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
