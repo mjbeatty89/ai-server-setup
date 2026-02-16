@@ -50,20 +50,29 @@ sudo apt install -y $ESSENTIALS
 print_status "Configuring repositories..."
 
 # 1Password Repo
-print_status "Adding 1Password repository..."
-curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
+(
+    print_status "Adding 1Password repository..."
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
+) &
 
 # Docker Repo
-print_status "Adding Docker repository..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+(
+    print_status "Adding Docker repository..."
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+) &
 
 # NVIDIA Repo (conditional)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
-    print_status "Adding NVIDIA repository..."
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
+    (
+        print_status "Adding NVIDIA repository..."
+        sudo add-apt-repository ppa:graphics-drivers/ppa -y -n
+    ) &
 fi
+
+print_status "Waiting for repository configuration..."
+wait
 
 # Consolidate apt update
 print_status "Updating package lists with new repositories..."
@@ -83,8 +92,8 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
-    # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
+    # Install in batches to avoid command line length issues (increased batch size for performance)
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
@@ -94,12 +103,12 @@ fi
 print_status "Installing Snap packages..."
 SNAP_FILE="packages/installed-snaps.txt"
 if [ -f "$SNAP_FILE" ]; then
-    while IFS= read -r snap; do
-        if [[ ! -z "$snap" && "$snap" != "snapd" && "$snap" != "bare" && "$snap" != "core"* ]]; then
-            print_status "Installing snap: $snap"
-            sudo snap install "$snap" 2>/dev/null || sudo snap install "$snap" --classic 2>/dev/null || print_error "Failed to install snap: $snap"
-        fi
-    done < "$SNAP_FILE"
+    # Filter snaps to exclude system snaps that shouldn't be manually re-installed
+    # Use xargs -P 4 to install in parallel (up to 4 concurrent install requests)
+    grep -vE "^\s*#|^\s*$|^snapd$|^bare$|^core" "$SNAP_FILE" | xargs -P 4 -I {} bash -c '
+        echo -e "\033[1;33m[*]\033[0m Installing snap: {}"
+        sudo snap install "{}" 2>/dev/null || sudo snap install "{}" --classic 2>/dev/null || echo -e "\033[0;31m[✗]\033[0m Failed to install snap: {}"
+    '
     print_success "Snap packages installed"
 else
     print_error "Snap list not found: $SNAP_FILE"
