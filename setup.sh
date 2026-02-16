@@ -33,6 +33,10 @@ if [[ $EUID -eq 0 ]]; then
    exit 1
 fi
 
+# Ask about NVIDIA drivers early
+print_status "Would you like to install NVIDIA drivers for your GPUs? (y/n)"
+read -r INSTALL_NVIDIA
+
 # Update system first
 print_status "Updating package lists..."
 sudo apt update
@@ -42,17 +46,31 @@ print_status "Installing essential packages..."
 ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
 sudo apt install -y $ESSENTIALS
 
-# Install 1Password (special case - needs repo)
-print_status "Setting up 1Password repository..."
+# Add all repositories first to consolidate apt update
+print_status "Configuring repositories..."
+
+# 1Password Repo
+print_status "Adding 1Password repository..."
 curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
-sudo apt update
 
-# Install Docker (if it was in snap list)
-print_status "Installing Docker..."
+# Docker Repo
+print_status "Adding Docker repository..."
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# NVIDIA Repo (conditional)
+if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
+    print_status "Adding NVIDIA repository..."
+    sudo add-apt-repository ppa:graphics-drivers/ppa -y
+fi
+
+# Consolidate apt update
+print_status "Updating package lists with new repositories..."
 sudo apt update
+
+# Install Docker
+print_status "Installing Docker..."
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER
 
@@ -66,7 +84,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
     # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 50 sudo apt install -y --ignore-missing || true
+    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
@@ -101,12 +119,9 @@ fi
 print_status "Installing Python pip..."
 sudo apt install -y python3-pip python3-venv
 
-# Setup NVIDIA drivers (for your GPUs)
-print_status "Would you like to install NVIDIA drivers for your GPUs? (y/n)"
-read -r response
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
-    sudo apt update
+# Install NVIDIA drivers (if selected)
+if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
+    print_status "Installing NVIDIA drivers..."
     sudo apt install -y nvidia-driver-550 nvidia-utils-550
     print_success "NVIDIA drivers installed (reboot required)"
 fi
