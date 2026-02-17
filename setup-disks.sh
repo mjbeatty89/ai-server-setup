@@ -9,6 +9,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# Configuration
+AI_WORKSPACE_DIR=${AI_WORKSPACE_DIR:-/ai-workspace}
+DATA_DIR=${DATA_DIR:-/data}
+FSTAB_FILE=${FSTAB_FILE:-/etc/fstab}
+
 echo -e "${RED}========================================${NC}"
 echo -e "${RED}WARNING: DISK CONFIGURATION SCRIPT${NC}"
 echo -e "${RED}This will DESTROY ALL DATA on:${NC}"
@@ -41,13 +46,13 @@ sudo sgdisk -n 1:0:0 -t 1:8300 -c 1:"AI-Workspace" /dev/nvme0n1
 sudo mkfs.ext4 -L ai-workspace /dev/nvme0n1p1
 
 # Create mount point
-sudo mkdir -p /ai-workspace
+sudo mkdir -p "$AI_WORKSPACE_DIR"
 
 # Mount temporarily
-sudo mount /dev/nvme0n1p1 /ai-workspace
+sudo mount /dev/nvme0n1p1 "$AI_WORKSPACE_DIR"
 
 # Set permissions
-sudo chown -R $USER:$USER /ai-workspace
+sudo chown -R $USER:$USER "$AI_WORKSPACE_DIR"
 
 echo -e "${GREEN}[2/4] Setting up 4TB drive additional storage...${NC}"
 
@@ -74,48 +79,67 @@ if [[ "$response" =~ ^[Yy]$ ]]; then
     sudo mkfs.ext4 -L data /dev/nvme1n1p7
     
     # Create mount point
-    sudo mkdir -p /data
+    sudo mkdir -p "$DATA_DIR"
     
     # Mount temporarily
-    sudo mount /dev/nvme1n1p7 /data
+    sudo mount /dev/nvme1n1p7 "$DATA_DIR"
     
     # Set permissions
-    sudo chown -R $USER:$USER /data
+    sudo chown -R $USER:$USER "$DATA_DIR"
 fi
 
-echo -e "${GREEN}[3/4] Configuring /etc/fstab for automatic mounting...${NC}"
+echo -e "${GREEN}[3/4] Configuring $FSTAB_FILE for automatic mounting...${NC}"
 
 # Backup current fstab
-sudo cp /etc/fstab /etc/fstab.backup.$(date +%Y%m%d)
+if [[ "$FSTAB_FILE" == "/etc/fstab" ]]; then
+    sudo cp "$FSTAB_FILE" "$FSTAB_FILE.backup.$(date +%Y%m%d)"
+else
+    # For testing/custom path
+    cp "$FSTAB_FILE" "$FSTAB_FILE.backup.$(date +%Y%m%d)" 2>/dev/null || sudo cp "$FSTAB_FILE" "$FSTAB_FILE.backup.$(date +%Y%m%d)"
+fi
 
 # Get UUIDs
 UUID_AI=$(sudo blkid -s UUID -o value /dev/nvme0n1p1)
 UUID_DATA=$(sudo blkid -s UUID -o value /dev/nvme1n1p7)
 
 # Add entries to fstab
-echo "" | sudo tee -a /etc/fstab
-echo "# AI Server Storage Configuration" | sudo tee -a /etc/fstab
-echo "UUID=$UUID_AI /ai-workspace ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+# Check if header already exists
+if ! grep -q "AI Server Storage Configuration" "$FSTAB_FILE"; then
+    echo "" | sudo tee -a "$FSTAB_FILE"
+    echo "# AI Server Storage Configuration" | sudo tee -a "$FSTAB_FILE"
+fi
+
+# Check for AI Workspace entry (by UUID or mount point)
+if ! grep -q "UUID=$UUID_AI" "$FSTAB_FILE" && ! grep -q "[[:space:]]$AI_WORKSPACE_DIR[[:space:]]" "$FSTAB_FILE"; then
+    echo "UUID=$UUID_AI $AI_WORKSPACE_DIR ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a "$FSTAB_FILE"
+else
+    echo "Entry for AI Workspace (UUID=$UUID_AI or path $AI_WORKSPACE_DIR) already exists in $FSTAB_FILE"
+fi
 
 if [[ ! -z "$UUID_DATA" ]]; then
-    echo "UUID=$UUID_DATA /data ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+    # Check for Data entry (by UUID or mount point)
+    if ! grep -q "UUID=$UUID_DATA" "$FSTAB_FILE" && ! grep -q "[[:space:]]$DATA_DIR[[:space:]]" "$FSTAB_FILE"; then
+        echo "UUID=$UUID_DATA $DATA_DIR ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a "$FSTAB_FILE"
+    else
+        echo "Entry for Data (UUID=$UUID_DATA or path $DATA_DIR) already exists in $FSTAB_FILE"
+    fi
 fi
 
 echo -e "${GREEN}[4/4] Setting up directory structure...${NC}"
 
 # Create directory structure for AI workspace
-mkdir -p /ai-workspace/{models,datasets,projects,configs,checkpoints}
-mkdir -p /ai-workspace/models/{llm,vision,audio,custom}
-mkdir -p /ai-workspace/datasets/{raw,processed,cache}
-mkdir -p /ai-workspace/projects/{experiments,production}
+mkdir -p "$AI_WORKSPACE_DIR"/{models,datasets,projects,configs,checkpoints}
+mkdir -p "$AI_WORKSPACE_DIR"/models/{llm,vision,audio,custom}
+mkdir -p "$AI_WORKSPACE_DIR"/datasets/{raw,processed,cache}
+mkdir -p "$AI_WORKSPACE_DIR"/projects/{experiments,production}
 
 # Create directory structure for data
-if [[ -d "/data" ]]; then
-    mkdir -p /data/{backup,downloads,docker,logs}
+if [[ -d "$DATA_DIR" ]]; then
+    mkdir -p "$DATA_DIR"/{backup,downloads,docker,logs}
 fi
 
 # Create README in each location
-cat > /ai-workspace/README.md << 'EOF'
+cat > "$AI_WORKSPACE_DIR/README.md" << 'EOF'
 # AI Workspace
 
 This drive is dedicated to AI/ML workloads.
@@ -147,9 +171,9 @@ echo -e "${GREEN}Disk Setup Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Storage configuration:"
-echo "- /ai-workspace (500GB) - AI models and datasets"
-if [[ -d "/data" ]]; then
-    echo "- /data (3.5TB) - General data storage"
+echo "- $AI_WORKSPACE_DIR (500GB) - AI models and datasets"
+if [[ -d "$DATA_DIR" ]]; then
+    echo "- $DATA_DIR (3.5TB) - General data storage"
 fi
 echo ""
 echo "Run 'df -h' to verify mounts"
