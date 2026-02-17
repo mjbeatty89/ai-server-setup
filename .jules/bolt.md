@@ -1,3 +1,7 @@
 ## 2024-05-18 - Optimized Apt Installation
 **Learning:** `apt update` is a network-heavy operation. Running it multiple times for each repository addition (1Password, Docker, PPA) significantly slows down the setup script. Grouping repository additions and running a single update is a major performance win.
 **Action:** When adding multiple repositories, consolidate them into a single block and run `apt update` only once afterwards. Also, use `xargs` with a larger batch size (e.g., 500) for bulk package installations to reduce `apt` invocation overhead.
+
+## 2024-05-19 - Parallel Repository Setup & Batched Apt Install
+**Learning:** Shell scripts often execute network and disk IO operations sequentially by default. Parallelizing independent tasks (like downloading GPG keys and adding repositories) using background subshells `(...) &` and `wait` can significantly reduce setup time. Also, `apt install` has significant overhead per invocation; increasing `xargs` batch size from 500 to 3000 reduces this overhead by minimizing dependency resolution cycles. Finally, `add-apt-repository` runs `apt update` by default; using `-n` prevents this redundant update when a consolidated update follows.
+**Action:** Use background jobs for independent setup tasks. Maximize `apt install` batch sizes within `ARG_MAX` limits. Always check for and suppress redundant `apt update` calls in helper commands like `add-apt-repository`.
