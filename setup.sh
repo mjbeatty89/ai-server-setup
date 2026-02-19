@@ -47,23 +47,37 @@ ESSENTIALS="curl wget git build-essential software-properties-common apt-transpo
 sudo apt install -y $ESSENTIALS
 
 # Add all repositories first to consolidate apt update
-print_status "Configuring repositories..."
+print_status "Configuring repositories in parallel..."
 
 # 1Password Repo
 print_status "Adding 1Password repository..."
-curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
+(
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
+) &
+PID_1PASS=$!
 
 # Docker Repo
 print_status "Adding Docker repository..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+(
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+) &
+PID_DOCKER=$!
 
 # NVIDIA Repo (conditional)
+PID_NVIDIA=""
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
+    # Use -n to avoid automatic apt update (we do it later)
+    (
+        sudo add-apt-repository ppa:graphics-drivers/ppa -y -n
+    ) &
+    PID_NVIDIA=$!
 fi
+
+# Wait for background processes
+wait $PID_1PASS $PID_DOCKER $PID_NVIDIA
 
 # Consolidate apt update
 print_status "Updating package lists with new repositories..."
@@ -83,8 +97,8 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
-    # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
+    # Install in large batches to reduce apt overhead (max command line ~2MB)
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
