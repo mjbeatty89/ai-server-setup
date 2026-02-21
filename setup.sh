@@ -62,7 +62,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 # NVIDIA Repo (conditional)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
+    # Use -n to skip implicit update, relying on the consolidated update below
+    sudo add-apt-repository ppa:graphics-drivers/ppa -y -n
 fi
 
 # Consolidate apt update
@@ -83,8 +84,9 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
-    # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
+    # Install in larger batches (3000) to minimize apt startup overhead and dependency resolution cycles
+    # Previous batch size of 500 caused ~3x more apt invocations for ~1200 packages
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
