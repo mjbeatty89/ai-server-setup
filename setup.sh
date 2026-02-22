@@ -43,7 +43,7 @@ sudo apt update
 
 # Install essential packages first
 print_status "Installing essential packages..."
-ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
+ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release python3-pip python3-venv"
 sudo apt install -y $ESSENTIALS
 
 # Add all repositories first to consolidate apt update
@@ -62,7 +62,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 # NVIDIA Repo (conditional)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
+    sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
 fi
 
 # Consolidate apt update
@@ -84,7 +84,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
     # Install in batches to avoid command line length issues
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
@@ -114,10 +114,6 @@ if [ -d "configs" ]; then
 else
     print_error "Config directory not found"
 fi
-
-# Install Python pip
-print_status "Installing Python pip..."
-sudo apt install -y python3-pip python3-venv
 
 # Install NVIDIA drivers (if selected)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
