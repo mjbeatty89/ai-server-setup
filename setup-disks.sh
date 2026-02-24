@@ -105,7 +105,7 @@ else
 fi
 
 if [[ ! -z "$UUID_DATA" ]]; then
-    if grep -q "[[:space:]]/data[[:space:]]" /etc/fstab; then
+    if grep -v '^[[:space:]]*#' /etc/fstab | grep -q "[[:space:]]/data[[:space:]]"; then
         echo -e "${YELLOW}Warning: /data already in /etc/fstab. Skipping append.${NC}"
     else
         echo "UUID=$UUID_DATA /data ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
