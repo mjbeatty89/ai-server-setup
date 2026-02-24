@@ -34,6 +34,7 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 # NVIDIA Driver Prompt (Moved to top)
+# Ask about NVIDIA drivers early
 print_status "Would you like to install NVIDIA drivers for your GPUs? (y/n)"
 read -r INSTALL_NVIDIA
 
@@ -43,7 +44,7 @@ sudo apt update
 
 # Install essential packages first
 print_status "Installing essential packages..."
-ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
+ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release python3-pip python3-venv"
 sudo apt install -y $ESSENTIALS
 
 # Configure Repositories
@@ -67,6 +68,31 @@ print_status "Updating package lists with new repositories..."
 sudo apt update
 
 # Install Docker Packages
+# Add all repositories first to consolidate apt update
+print_status "Configuring repositories..."
+
+# 1Password Repo
+print_status "Adding 1Password repository..."
+curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
+
+# Docker Repo
+print_status "Adding Docker repository..."
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# NVIDIA Repo (conditional)
+if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
+    print_status "Adding NVIDIA repository..."
+    sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
+    sudo add-apt-repository -n ppa:graphics-drivers/ppa -y
+fi
+
+# Consolidate apt update
+print_status "Updating package lists with new repositories..."
+sudo apt update
+
+# Install Docker
 print_status "Installing Docker..."
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER
@@ -82,6 +108,9 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     # Install in batches (Optimized to 500)
     echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
+    # Install in batches to avoid command line length issues
+    echo "$PACKAGES" | xargs sudo apt install -y --ignore-missing || true
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
