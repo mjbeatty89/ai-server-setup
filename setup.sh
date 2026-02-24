@@ -62,6 +62,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 # NVIDIA Repo (conditional)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
+    sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
     sudo add-apt-repository -n ppa:graphics-drivers/ppa -y
 fi
 
@@ -84,6 +85,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
     # Install in batches to avoid command line length issues
+    echo "$PACKAGES" | xargs sudo apt install -y --ignore-missing || true
     echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
