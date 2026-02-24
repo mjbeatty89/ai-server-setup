@@ -98,7 +98,7 @@ if ! grep -q "AI Server Storage Configuration" /etc/fstab; then
     echo "# AI Server Storage Configuration" | sudo tee -a /etc/fstab
 fi
 
-if grep -q "[[:space:]]/ai-workspace[[:space:]]" /etc/fstab; then
+if grep -v '^[[:space:]]*#' /etc/fstab | grep -q "[[:space:]]/ai-workspace[[:space:]]"; then
     echo -e "${YELLOW}Warning: /ai-workspace already in /etc/fstab. Skipping append.${NC}"
 else
     echo "UUID=$UUID_AI /ai-workspace ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
