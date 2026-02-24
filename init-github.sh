@@ -1,7 +1,7 @@
 #!/bin/bash
 # Initialize GitHub repository for AI Server Setup
 
-set -e
+set -euo pipefail
 
 # Colors
 GREEN='\033[0;32m'
