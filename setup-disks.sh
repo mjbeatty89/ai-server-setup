@@ -93,12 +93,23 @@ UUID_AI=$(sudo blkid -s UUID -o value /dev/nvme0n1p1)
 UUID_DATA=$(sudo blkid -s UUID -o value /dev/nvme1n1p7)
 
 # Add entries to fstab
-echo "" | sudo tee -a /etc/fstab
-echo "# AI Server Storage Configuration" | sudo tee -a /etc/fstab
-echo "UUID=$UUID_AI /ai-workspace ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+if ! grep -q "AI Server Storage Configuration" /etc/fstab; then
+    echo "" | sudo tee -a /etc/fstab
+    echo "# AI Server Storage Configuration" | sudo tee -a /etc/fstab
+fi
+
+if grep -v '^[[:space:]]*#' /etc/fstab | grep -q "[[:space:]]/ai-workspace[[:space:]]"; then
+    echo -e "${YELLOW}Warning: /ai-workspace already in /etc/fstab. Skipping append.${NC}"
+else
+    echo "UUID=$UUID_AI /ai-workspace ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+fi
 
 if [[ ! -z "$UUID_DATA" ]]; then
-    echo "UUID=$UUID_DATA /data ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+    if grep -v '^[[:space:]]*#' /etc/fstab | grep -q "[[:space:]]/data[[:space:]]"; then
+        echo -e "${YELLOW}Warning: /data already in /etc/fstab. Skipping append.${NC}"
+    else
+        echo "UUID=$UUID_DATA /data ext4 defaults,noatime,errors=remount-ro 0 2" | sudo tee -a /etc/fstab
+    fi
 fi
 
 echo -e "${GREEN}[4/4] Setting up directory structure...${NC}"
