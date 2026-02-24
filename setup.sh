@@ -47,25 +47,6 @@ print_status "Installing essential packages..."
 ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release python3-pip python3-venv"
 sudo apt install -y $ESSENTIALS
 
-# Configure Repositories
-print_status "Configuring repositories (1Password, Docker, NVIDIA)..."
-
-# 1Password Repo
-curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
-
-# Docker Repo
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# NVIDIA Repo
-if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
-    sudo add-apt-repository ppa:graphics-drivers/ppa -y
-fi
-
-# Update all package lists
-print_status "Updating package lists with new repositories..."
-sudo apt update
 
 # Install Docker Packages
 # Add all repositories first to consolidate apt update
@@ -85,7 +66,6 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
     sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
-    sudo add-apt-repository -n ppa:graphics-drivers/ppa -y
 fi
 
 # Consolidate apt update
@@ -107,8 +87,6 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
     
     # Install in batches (Optimized to 500)
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
-    # Install in batches to avoid command line length issues
     if [ -n "$PACKAGES" ]; then
         echo "$PACKAGES" | xargs -r -n 500 sudo apt install -y --ignore-missing || true
     fi
@@ -142,9 +120,6 @@ else
     print_error "Config directory not found"
 fi
 
-# Install Python pip
-print_status "Installing Python pip..."
-sudo apt install -y python3-pip python3-venv
 
 # Install NVIDIA drivers (if selected)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then

@@ -11,3 +11,7 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+
+## 2024-05-25 - Redundant Logic in Shell Scripts
+**Learning:** Copy-paste errors in shell scripts can lead to identical blocks of expensive operations (like `apt update` and package installation) running multiple times. `xargs` without `-r` can also lead to unintended execution on empty input, but more importantly, conditional logic wrapping a command that was already executed unconditionally is a major waste.
+**Action:** Always verify the flow of shell scripts to ensure expensive commands are executed exactly once. Use `set -x` or dry runs to debug execution flow if unsure.
