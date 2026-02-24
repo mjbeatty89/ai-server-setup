@@ -43,7 +43,7 @@ sudo apt update
 
 # Install essential packages first
 print_status "Installing essential packages..."
-ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
+ESSENTIALS="curl wget git build-essential software-properties-common apt-transport-https ca-certificates gnupg lsb-release python3-pip python3-venv"
 sudo apt install -y $ESSENTIALS
 
 # Add all repositories first to consolidate apt update
@@ -64,6 +64,8 @@ if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
     # Use -n to skip implicit update, relying on the consolidated update below
     sudo add-apt-repository ppa:graphics-drivers/ppa -y -n
+    sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
+    sudo add-apt-repository -n ppa:graphics-drivers/ppa -y
 fi
 
 # Consolidate apt update
@@ -86,6 +88,8 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     # Install in larger batches (3000) to minimize apt startup overhead and dependency resolution cycles
     # Previous batch size of 500 caused ~3x more apt invocations for ~1200 packages
+    # Install in batches to avoid command line length issues
+    echo "$PACKAGES" | xargs sudo apt install -y --ignore-missing || true
     echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
@@ -116,10 +120,6 @@ if [ -d "configs" ]; then
 else
     print_error "Config directory not found"
 fi
-
-# Install Python pip
-print_status "Installing Python pip..."
-sudo apt install -y python3-pip python3-venv
 
 # Install NVIDIA drivers (if selected)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
