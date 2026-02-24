@@ -63,6 +63,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
     print_status "Adding NVIDIA repository..."
     sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
+    sudo add-apt-repository -n ppa:graphics-drivers/ppa -y
 fi
 
 # Consolidate apt update
@@ -85,6 +86,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     
     # Install in batches to avoid command line length issues
     echo "$PACKAGES" | xargs sudo apt install -y --ignore-missing || true
+    echo "$PACKAGES" | xargs -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
