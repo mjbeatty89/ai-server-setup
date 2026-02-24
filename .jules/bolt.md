@@ -1,3 +1,6 @@
+## 2025-02-12 - Shell Script Optimization
+**Learning:** Shell scripts installing many packages can be bottlenecked by repeated 'apt update' calls and small 'xargs' batch sizes. Consolidating repository additions and increasing batch sizes (e.g., from 50 to 500) significantly reduces overhead.
+**Action:** Look for repeated package manager invocations and batch them wherever possible. Check xargs constraints but prefer larger batches for package managers.
 ## 2024-05-18 - Optimized Apt Installation
 **Learning:** `apt update` is a network-heavy operation. Running it multiple times for each repository addition (1Password, Docker, PPA) significantly slows down the setup script. Grouping repository additions and running a single update is a major performance win.
 **Action:** When adding multiple repositories, consolidate them into a single block and run `apt update` only once afterwards. Also, use `xargs` with a larger batch size (e.g., 500) for bulk package installations to reduce `apt` invocation overhead.
