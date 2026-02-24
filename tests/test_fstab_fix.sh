@@ -99,7 +99,7 @@ else
 fi
 
 # Count occurrences of /ai-workspace
-COUNT=$(grep -c "/ai-workspace" "$FSTAB")
+COUNT=$(grep -c "[[:space:]]/ai-workspace[[:space:]]" "$FSTAB")
 if [[ "$COUNT" -eq 1 ]]; then
     echo "SUCCESS: Only 1 entry for /ai-workspace."
 else
