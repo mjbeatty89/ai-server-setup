@@ -11,3 +11,6 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+## 2026-03-06 - Bash Script Deduplication
+**Learning:** Duplicate code blocks (like repeated repository setup and apt updates) and redundant package installations (installing python3-pip twice) significantly degrade performance in system setup scripts. Removing redundant bash executions (such as unconditional xargs alongside a conditional one) and consolidating installations optimizes execution time and network I/O.
+**Action:** Audit bash scripts to ensure blocks configuring repositories, running apt updates, or installing packages are not duplicated. Ensure xargs is not run redundantly.
