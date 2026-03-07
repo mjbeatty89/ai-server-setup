@@ -1,3 +1,7 @@
+## 2026-03-07 - Duplicated Repository Configurations and Small Batch Sizes
+**Learning:** Explicit duplication of code blocks for repository configuration (which include implicit or explicit `apt update`s) silently and drastically inflates script execution time due to redundant network I/O. Furthermore, conservative `xargs` batch sizes (e.g., 500) don't fully leverage the capabilities of modern system argument lengths, resulting in unnecessarily repeated package manager overhead.
+**Action:** When updating or refactoring scripts, thoroughly verify that there aren't duplicated setup sections for dependencies, and consolidate all apt operations. Always evaluate if `xargs` batch limits can be increased (e.g., to 3000) for package managers without hitting `ARG_MAX` limits.
+
 ## 2025-02-12 - Shell Script Optimization
 **Learning:** Shell scripts installing many packages can be bottlenecked by repeated 'apt update' calls and small 'xargs' batch sizes. Consolidating repository additions and increasing batch sizes (e.g., from 50 to 500) significantly reduces overhead.
 **Action:** Look for repeated package manager invocations and batch them wherever possible. Check xargs constraints but prefer larger batches for package managers.
