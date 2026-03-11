@@ -11,3 +11,7 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+
+## 2026-03-11 - Catching Redundant Executions in Shell Scripts
+**Learning:** In long bash scripts, it's very easy to accidentally duplicate major blocks of logic, such as entire repository configurations, dual `xargs` executions (one un-optimized, one optimized), or re-installing essential packages later down the script. These exact functional redundancies silently double script execution time through redundant network and I/O.
+**Action:** Always carefully check scripts for duplicated blocks of operations (like `apt install`, `apt update`, and `xargs` commands over the same dataset) before merging, since bash scripts don't naturally complain about redundant work like code analyzers do.
