@@ -11,3 +11,7 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+
+## 2026-02-24 - Eliminating Duplicated Repository Configuration Blocks
+**Learning:** Shell scripts can accidentally duplicate large setup blocks (like adding 1Password, Docker, and NVIDIA repos followed by `apt update`), which doubles the time spent on network-heavy package manager operations. Furthermore, missing flags like `-n` on `add-apt-repository` cause further hidden `apt update` calls.
+**Action:** Before making changes to a shell script, check for duplicated logic blocks and consolidate them. Ensure `apt update` is run only once after all repositories are added, and that flags like `-n` on `add-apt-repository` are consistently used.
