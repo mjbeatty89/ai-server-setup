@@ -11,3 +11,6 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+## 2024-05-30 - Duplicated Configuration Blocks
+**Learning:** Duplicating repository additions and duplicate package installation commands caused severe hidden performance regressions via redundant I/O and network operations.
+**Action:** Always verify that setup blocks (e.g., repository additions or apt updates) and package installations are not duplicated.
