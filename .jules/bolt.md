@@ -11,3 +11,7 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+
+## 2026-04-13 - Code Duplication and Batch Size Limits in Setup Scripts
+**Learning:** Having duplicate execution blocks (like repo additions or xargs commands) leads to massive redundant overhead. Setting batch sizes to only 500 when tools like `xargs` support much larger batches limits the efficiency of bulk operations like `apt install`.
+**Action:** Periodically audit scripts for accidentally duplicated code blocks (e.g. duplicate repo definitions or apt updates). Increase `xargs -n` bounds to larger values (e.g., 3000) coupled with `-r` for empty checks to maximize batch installation efficiency and reduce runtime overhead. Also dynamically add previously installed grouped packages (like `ESSENTIALS`) to `SKIP_PACKAGES` to prevent evaluating them again.
