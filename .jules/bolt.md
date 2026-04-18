@@ -11,3 +11,6 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+## 2026-10-26 - Removing redundant setup logic and network I/O
+**Learning:** Having duplicate setup blocks like `add-apt-repository` configurations and unconditional `xargs` invocations without the `-r` flag leads to redundant network I/O, increased script execution time, and possible conflicts. Missing filtering for already installed essential packages also adds unnecessary overhead.
+**Action:** When updating or refactoring setup scripts, actively check for and remove duplicated logic blocks (e.g. repeated repository setups or apt updates). Ensure bulk package installations use process substitution to filter out already installed packages (like `ESSENTIALS`), and use `xargs` optimally with flags like `-r` and large batch sizes (e.g., 3000) to minimize unnecessary commands.
