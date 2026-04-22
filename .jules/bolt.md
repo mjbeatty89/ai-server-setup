@@ -11,3 +11,6 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+## 2025-02-12 - Duplicate Optimization Execution
+**Learning:** Even highly optimized sections of code can suffer massive performance issues if carelessly duplicated during merges or edits. Identifying duplicated code blocks (e.g., repository configurations and `xargs` installations) and utilizing features like process substitution (`grep -vFxf <(cmd)`) is crucial for maintaining script performance.
+**Action:** When evaluating code for performance regressions, specifically hunt for exact or near-exact code duplications before making architectural changes. Always verify that optimized commands are not run multiple times redundantly.
