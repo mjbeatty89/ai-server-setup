@@ -86,6 +86,7 @@ if [ -f "$PACKAGE_FILE" ]; then
     PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | grep -vFxf <(echo "$ESSENTIALS" | tr ' ' '\n') | tr '\n' ' ')
     
     # Install in batches to avoid command line length issues
+    # Optimized batch size 3000 to drastically reduce apt invocation overhead
     if [ -n "$PACKAGES" ]; then
         echo "$PACKAGES" | xargs -r -n 3000 sudo apt install -y --ignore-missing || true
     fi
@@ -118,10 +119,6 @@ if [ -d "configs" ]; then
 else
     print_error "Config directory not found"
 fi
-
-# Install Python pip
-print_status "Installing Python pip..."
-sudo apt install -y python3-pip python3-venv
 
 # Install NVIDIA drivers (if selected)
 if [[ "$INSTALL_NVIDIA" =~ ^[Yy]$ ]]; then
