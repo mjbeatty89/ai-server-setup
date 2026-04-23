@@ -11,3 +11,6 @@
 ## 2026-02-23 - Suppressing Implicit Apt Updates
 **Learning:** `add-apt-repository` implicitly runs `apt update` unless the `-n` flag is used. In scripts that add multiple repositories and then run a consolidated `apt update`, this implicit behavior causes redundant network operations and slows down execution.
 **Action:** Always use `add-apt-repository -n` when adding repositories in a script that includes a subsequent explicit `apt update`. Also, consolidating small package installs into larger lists (like `ESSENTIALS`) reduces the overhead of multiple `apt install` invocations.
+## 2026-04-23 - sgdisk Command Optimization
+**Learning:** Sequential calls to `sgdisk` for partition deletion can incur measurable overhead due to repeated process spawning and disk access.
+**Action:** Always combine multiple partition deletion commands into a single `sgdisk` invocation using multiple `-d` flags (e.g., `sgdisk -d 2 -d 3 -d 4`) to minimize execution time and process overhead.
