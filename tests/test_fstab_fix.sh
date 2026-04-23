@@ -5,8 +5,8 @@ set -e
 UUID_AI="mock-uuid-ai"
 UUID_DATA="mock-uuid-data"
 FSTAB="fstab.tmp"
-YELLOW='\033[1;33m'
-NC='\033[0m'
+
+source "$(dirname "$0")/../utils/colors.sh"
 
 # Cleanup function
 cleanup() {

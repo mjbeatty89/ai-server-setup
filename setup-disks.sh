@@ -4,10 +4,7 @@
 
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+source "$(dirname "$0")/utils/colors.sh"
 
 echo -e "${RED}========================================${NC}"
 echo -e "${RED}WARNING: DISK CONFIGURATION SCRIPT${NC}"
