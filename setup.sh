@@ -104,14 +104,11 @@ if [ -f "$PACKAGE_FILE" ]; then
     # Filter out packages that might cause issues or need special handling
     SKIP_PACKAGES="1password|snap|docker|nvidia|cuda|linux-image|linux-headers|linux-modules"
     
-    PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | tr '\n' ' ')
-    
-    # Install in batches (Optimized to 500)
-    echo "$PACKAGES" | xargs -n 500 sudo apt install -y --ignore-missing || true
-    # Install in batches to avoid command line length issues
-    if [ -n "$PACKAGES" ]; then
-        echo "$PACKAGES" | xargs -r -n 500 sudo apt install -y --ignore-missing || true
-    fi
+    # Use zero-terminated strings for secure processing
+    grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | \
+        grep -v '^$' | \
+        tr '\n' '\0' | \
+        xargs -0 -r -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"
