@@ -5,10 +5,7 @@
 set -e  # Exit on error
 
 # Color output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+source "$(dirname "$0")/utils/colors.sh"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}AI Server Setup - System Restoration${NC}"
@@ -83,12 +80,12 @@ if [ -f "$PACKAGE_FILE" ]; then
     # Filter out packages that might cause issues or need special handling
     SKIP_PACKAGES="1password|snap|docker|nvidia|cuda|linux-image|linux-headers|linux-modules"
     
-    PACKAGES=$(grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | grep -vFxf <(echo "$ESSENTIALS" | tr ' ' '\n') | tr '\n' ' ')
-    
-    # Install in batches to avoid command line length issues
-    if [ -n "$PACKAGES" ]; then
-        echo "$PACKAGES" | xargs -r -n 3000 sudo apt install -y --ignore-missing || true
-    fi
+    # Use zero-terminated strings for secure processing; strip empty lines first to prevent null-arg regressions
+    grep -vE "$SKIP_PACKAGES" "$PACKAGE_FILE" | \
+        grep -vFxf <(echo "$ESSENTIALS" | tr ' ' '\n') | \
+        grep -v '^$' | \
+        tr '\n' '\0' | \
+        xargs -0 -r -n 3000 sudo apt install -y --ignore-missing || true
     print_success "APT packages installed"
 else
     print_error "Package list not found: $PACKAGE_FILE"

@@ -4,10 +4,7 @@
 
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+source "$(dirname "$0")/utils/colors.sh"
 
 echo -e "${RED}========================================${NC}"
 echo -e "${RED}WARNING: DISK CONFIGURATION SCRIPT${NC}"
@@ -63,9 +60,7 @@ read -r response
 
 if [[ "$response" =~ ^[Yy]$ ]]; then
     # Delete the unused partitions (keeping p1=EFI, p5=current system, p6=root)
-    sudo sgdisk -d 2 /dev/nvme1n1 2>/dev/null || true
-    sudo sgdisk -d 3 /dev/nvme1n1 2>/dev/null || true
-    sudo sgdisk -d 4 /dev/nvme1n1 2>/dev/null || true
+    sudo sgdisk -d 2 -d 3 -d 4 /dev/nvme1n1 2>/dev/null || true
     
     # Create new partition for data
     sudo sgdisk -n 7:0:0 -t 7:8300 -c 7:"Data" /dev/nvme1n1
