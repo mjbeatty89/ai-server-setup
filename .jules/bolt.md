@@ -17,3 +17,9 @@
 ## 2026-04-23 - sgdisk Command Optimization
 **Learning:** Sequential calls to `sgdisk` for partition deletion can incur measurable overhead due to repeated process spawning and disk access.
 **Action:** Always combine multiple partition deletion commands into a single `sgdisk` invocation using multiple `-d` flags (e.g., `sgdisk -d 2 -d 3 -d 4`) to minimize execution time and process overhead.
+## 2026-03-07 - Duplicated Repository Configurations and Batch Size Tuning
+**Learning:** Explicit duplication of code blocks for repository configuration (which include implicit or explicit `apt update`s) silently and drastically inflates script execution time due to redundant network I/O. Furthermore, conservative `xargs` batch sizes (e.g., 500) don't fully leverage the capabilities of modern system argument lengths, resulting in unnecessarily repeated package manager overhead.
+**Action:** When updating or refactoring scripts, thoroughly verify that there aren't duplicated setup sections for dependencies, and consolidate all apt operations. Always evaluate if `xargs` batch limits can be increased (e.g., to 3000) for package managers without hitting `ARG_MAX` limits.
+## 2025-02-12 - Duplicate Optimization Execution
+**Learning:** Even highly optimized sections of code can suffer massive performance issues if carelessly duplicated during merges or edits. Identifying duplicated code blocks (e.g., repository configurations and `xargs` installations) and utilizing features like process substitution (`grep -vFxf <(cmd)`) is crucial for maintaining script performance.
+**Action:** When evaluating code for performance regressions, specifically hunt for exact or near-exact code duplications before making architectural changes. Always verify that optimized commands are not run multiple times redundantly.
