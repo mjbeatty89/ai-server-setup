@@ -60,9 +60,7 @@ read -r response
 
 if [[ "$response" =~ ^[Yy]$ ]]; then
     # Delete the unused partitions (keeping p1=EFI, p5=current system, p6=root)
-    sudo sgdisk -d 2 /dev/nvme1n1 2>/dev/null || true
-    sudo sgdisk -d 3 /dev/nvme1n1 2>/dev/null || true
-    sudo sgdisk -d 4 /dev/nvme1n1 2>/dev/null || true
+    sudo sgdisk -d 2 -d 3 -d 4 /dev/nvme1n1 2>/dev/null || true
     
     # Create new partition for data
     sudo sgdisk -n 7:0:0 -t 7:8300 -c 7:"Data" /dev/nvme1n1

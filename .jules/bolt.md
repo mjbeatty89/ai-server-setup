@@ -14,3 +14,6 @@
 ## 2026-02-23 - Secure Package Processing via xargs
 **Learning:** When using `xargs` to process input from files (such as package lists) that might contain empty lines or uncontrolled spaces, combining `tr '\n' '\0'` with `xargs -0` is highly recommended to securely map strings to precise arguments. However, this method interprets empty lines as null arguments, causing failures for tools like `apt`. Stripping empty lines beforehand using `grep -v '^$'` prevents this regression.
 **Action:** Always sanitize empty lines before feeding file contents to `xargs -0`, specifically using `grep -v '^$'` to prevent null-argument regressions.
+## 2026-04-23 - sgdisk Command Optimization
+**Learning:** Sequential calls to `sgdisk` for partition deletion can incur measurable overhead due to repeated process spawning and disk access.
+**Action:** Always combine multiple partition deletion commands into a single `sgdisk` invocation using multiple `-d` flags (e.g., `sgdisk -d 2 -d 3 -d 4`) to minimize execution time and process overhead.
